@@ -1,0 +1,30 @@
+@import '../../../styles/variables';
+
+.button {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    width: 8rem;
+    height: 8rem;
+    border-radius: 4rem;
+    background-color: $importantColor;
+    display: inline-block;
+    cursor: pointer;
+    -webkit-user-select: none;  /* Chrome all / Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;      /* IE 10+ */
+    user-select: none;          /* Likely future */
+    color: $mainTextColor;
+
+    &:active {
+        background-color: lighten( $importantColor, 10% )
+    }
+    &:focus {
+        outline: none;
+    }
+
+    &.active {
+        background-color: $mainTextColor;
+        color: $importantColor;
+    }
+}

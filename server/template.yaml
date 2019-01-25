@@ -1,0 +1,323 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    aws-audio-recorder
+
+    Sample SAM Template for aws-audio-recorder
+
+Parameters:
+  HostingBucketName:
+    Type: "String"
+    Default: "webapp-hosting"
+  AudioFilesBucketName:
+    Type: "String"
+    Default: "audio-files"
+  SNSNewFileTopicName:
+    Type: "String"
+    Default: "new-audio-file-topic"
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+    Function:
+        Timeout: 20
+        Environment:
+            Variables:
+                DB_TABLE: AudioRecordingsTable
+                CURRENT_USER_ID: 1
+
+
+Resources:
+
+    PolicyDynamoDBReadonly:
+      DependsOn:
+        - "DynamoDBTable"
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: 'audio-rec-dynamodb-readonly'
+        Roles:
+          - RoleForLambdaApiGetRecordings
+          - RoleForLambdaS3CreateRecording
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Effect: Allow
+              Action:
+                - "dynamodb:BatchGetItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:Query"
+                - "dynamodb:Scan"
+              Resource: !Ref DynamoDBTable
+              # Resource: arn:aws:dynamodb:eu-west-1:273063963518:table/AudioRecordingsTable
+
+    PolicyS3AudioFilesBucketReadonly:
+      Type: AWS::IAM::Policy
+      DependsOn:
+        - "S3AudioFilesBucket"
+      Properties:
+        PolicyName: 'audio-rec-s3-audio-files-readonly'
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Effect: Allow
+              Action:
+                - "s3:GetObject"
+              Resource: !Ref S3AudioFilesBucket
+
+    SNSNewFile:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: "SNS For new Audio Files Events"
+        TopicName: !Ref SNSNewFileTopicName
+        Subscription:
+          -
+            Protocol: lambda
+            Endpoint: !GetAtt [ LambdaS3CreateRecording, Arn]
+
+    SNSNewFilePolicy:
+      Type: AWS::SNS::TopicPolicy
+      Properties:
+        Topics:
+          - !Ref SNSNewFile
+        PolicyDocument:
+          Id: SNSNewFilePolicy
+          Version: "2012-10-17"
+          Statement:
+            -
+              Sid: AllowS3ToPublishToSNSNewFile
+              Effect: Allow
+              Principal:
+                AWS: "*"
+              Action: sns:Publish
+              Resource: !Ref SNSNewFile
+              Condition:
+                ArnLike:
+                  aws:SourceArn: !Join 
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Sub '${AWS::StackName}-${AudioFilesBucketName}'
+
+    S3HostingBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: !Sub '${AWS::StackName}-${HostingBucketName}'
+        AccessControl: PublicRead
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: error.html
+        Tags:
+          -
+            Key: AppName
+            Value: AudioRecorder
+
+    PolicyForWebHostingBucket:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: WebHostingPolicy
+          Version: 2012-10-17
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref S3HostingBucket
+                  - /*
+        Bucket: !Ref S3HostingBucket
+
+    S3AudioFilesBucket:
+      Type: AWS::S3::Bucket
+      DependsOn:
+        - SNSNewFilePolicy
+      Properties:
+        BucketName: !Sub '${AWS::StackName}-${AudioFilesBucketName}'
+        CorsConfiguration:
+          CorsRules:
+            - 
+              AllowedOrigins:
+                - "*"
+              AllowedMethods:
+                - POST
+                - PUT
+                - GET
+                - DELETE
+                - HEAD
+              AllowedHeaders:
+                - "*"
+        Tags:
+          -
+            Key: AppName
+            Value: AudioRecorder
+        NotificationConfiguration:
+          TopicConfigurations:
+            -
+              Event: s3:ObjectCreated:*
+              Topic: !Ref SNSNewFile
+
+    # RoleForLambdaS3CreateRecording:
+    #   Type: AWS::IAM::Role
+    #   Properties:
+    #     AssumeRolePolicyDocument:
+    #       Version: "2012-10-17"
+    #       Statement:
+    #         - Effect: Allow
+    #           Principal:
+    #             Service: lambda.amazonaws.com
+    #           Action: "sts:AssumeRole"
+    #     Policies:
+    #       -
+    #         PolicyName: audio-recorder-s3-recordings-readonly
+    #         PolicyDocument:
+    #           Version: "2012-10-17"
+    #           Statement:
+    #             -
+    #               Effect: Allow
+    #               Action:
+    #                 - "s3:GetObject"
+    #               Resource: !Join 
+    #                 - ''
+    #                 - - 'arn:aws:s3:::'
+    #                   - !Ref S3AudioFilesBucket
+    #             -
+    #               Effect: Allow
+    #               Action:
+    #                 - "dynamodb:BatchGetItem"
+    #                 - "dynamodb:GetItem"
+    #                 - "dynamodb:Query"
+    #                 - "dynamodb:Scan"
+    #               Resource: !GetAtt [ DynamoDBTable, Arn]
+
+    LayerSharedModule:
+      Type: AWS::Serverless::LayerVersion
+      Properties:
+        LayerName: CoreModule
+        Description: Application core module
+        ContentUri: core/
+        CompatibleRuntimes:
+          - nodejs8.10
+
+    LambdaApiGetRecordings:
+        Type: AWS::Serverless::Function
+        DependsOn:
+          - "RoleForLambdaApiGetRecordings"
+        Properties:
+            CodeUri: api-get-recordings/
+            Handler: dist/get-recordings.lambdaHandler
+            Runtime: nodejs8.10
+            Role: !GetAtt [ RoleForLambdaApiGetRecordings, Arn]
+            Layers:
+              - !Ref LayerSharedModule
+            Events:
+                GetRecordings:
+                    Type: Api
+                    Properties:
+                        Path: /recordings
+                        Method: get
+
+    RoleForLambdaApiGetRecordings:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: "sts:AssumeRole"
+        Policies:
+          - !Ref PolicyDynamoDBReadonly
+
+    LambdaS3CreateRecording:
+        Type: AWS::Serverless::Function
+        DependsOn:
+          - "RoleForLambdaS3CreateRecording"
+        Properties:
+            CodeUri: s3-create-recording/
+            Handler: dist/create-recording.lambdaHandler
+            Runtime: nodejs8.10
+            Policies: AmazonS3ReadOnlyAccess
+            Layers:
+              - !Ref LayerSharedModule
+
+    RoleForLambdaS3CreateRecording:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: "sts:AssumeRole"
+        Policies:
+          - !Ref PolicyDynamoDBReadonly
+          - !Ref PolicyS3AudioFilesBucketReadonly
+          -
+            PolicyName: allow-sns-execution
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                -
+                  Effect: Allow
+                  Principal:
+                    Service: sns.amazonaws.com
+                  Action: 'lambda.invokeFunction'
+                  Resource: !Ref LambdaS3CreateRecording
+                  Condition:
+                    ArnLike:
+                      AWS:SourceArn: !Ref SNSNewFile
+
+              # NewAudioFileEvent:
+              #   Type: S3
+              #   Properties:
+              #     Bucket: !Ref S3AudioFilesBucket
+              #     Events: "s3:ObjectCreated:*"
+              #     Filter:
+              #       S3Key:
+              #         Rules:
+              #           -
+              #             Name: prefix
+              #             Value: audio-files/
+
+
+
+    LambdaApiGetUploadUrl:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: api-get-upload-url
+            Handler: dist/get-upload-url.lambdaHandler
+            Runtime: nodejs8.10
+            Role: !GetAtt [ RoleForLambdaApiGetRecordings, Arn]
+            Layers:
+              - !Ref LayerSharedModule
+            Events:
+                GetUploadUrl:
+                    Type: Api
+                    Properties:
+                        Path: /upload-url
+                        Method: get
+
+    DynamoDBTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: AudioRecordingsTable
+            AttributeDefinitions:
+                -
+                    AttributeName: userId
+                    AttributeType: S
+                -
+                    AttributeName: recordId
+                    AttributeType: S
+            KeySchema:
+                -
+                    AttributeName: userId
+                    KeyType: HASH
+                -
+                    AttributeName: recordId
+                    KeyType: RANGE
+            ProvisionedThroughput:
+                ReadCapacityUnits: 1
+                WriteCapacityUnits: 1

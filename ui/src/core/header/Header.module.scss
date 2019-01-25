@@ -1,0 +1,22 @@
+@import '../../styles/variables';
+
+.container {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 2rem;
+}
+
+.tab {
+    display: block;
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+    flex: 1;
+    text-align: center;
+    color: $inactiveTextColor;
+
+    &.activeTab {
+        border-bottom: 1px solid $activeTextColor;
+        color: $activeTextColor
+    }
+}
+
