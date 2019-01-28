@@ -1,38 +1,38 @@
-{  
-    "Records":[  
-       {  
-          "eventVersion":"2.0",
-          "eventSource":"aws:s3",
-          "awsRegion":"us-west-2",
-          "eventTime":"1970-01-01T00:00:00.000Z",
-          "eventName":"ObjectCreated:Put",
-          "userIdentity":{  
-             "principalId":"AIDAJDPLRKLG7UEXAMPLE"
-          },
-          "requestParameters":{  
-             "sourceIPAddress":"127.0.0.1"
-          },
-          "responseElements":{  
-             "x-amz-request-id":"C3D13FE58DE4C810",
-             "x-amz-id-2":"FMyUVURIY8/IgAtTv8xRjskZQpcIZ9KG4V5Wp6S7S/JRWeUWerMUE5JgHvANOjpD"
-          },
-          "s3":{
-             "s3SchemaVersion":"1.0",
-             "configurationId":"testConfigRule",
-             "bucket":{  
-                "name":"audio-recorder-recordings-bucket",
-                "ownerIdentity":{  
-                   "principalId":"A3NL1KOZZKExample"
+{
+    "Records": [
+        {
+            "eventVersion": "2.1",
+            "eventSource": "aws:s3",
+            "awsRegion": "eu-west-1",
+            "eventTime": "2019-01-25T20:09:42.305Z",
+            "eventName": "ObjectCreated:Put",
+            "userIdentity": {
+                "principalId": "A9575FY89SHB3"
+            },
+            "requestParameters": {
+                "sourceIPAddress": "109.173.193.140"
+            },
+            "responseElements": {
+                "x-amz-request-id": "D86C24311D14B198",
+                "x-amz-id-2": "Fz9g+5PrUDEsIrgFNv2YzDv4UkR6C5fZ4U5d0sIDYkS4mdiO92Ji6bSk6OVQk7NKc2kSy1Q9bew="
+            },
+            "s3": {
+                "s3SchemaVersion": "1.0",
+                "configurationId": "e1172847-5eed-4f44-9695-f8a1611c30af",
+                "bucket": {
+                    "name": "audio-rec-dev-audio-files",
+                    "ownerIdentity": {
+                        "principalId": "A9575FY89SHB3"
+                    },
+                    "arn": "arn:aws:s3:::audio-rec-dev-audio-files"
                 },
-                "arn":"arn:aws:s3:::audio-recorder-recordings-bucket"
-             },
-             "object":{  
-                "key":"audio-files/User 1 - Jan 19, 2019, 5:14:14 PM.ogg",
-                "size":1024,
-                "eTag":"d41d8cd98f00b204e9800998ecf8427e",
-                "versionId":"096fKKXTRTtl3on89fVO.nfljtsv6qko"
-             }
-          }
-       }
+                "object": {
+                    "key": "WhatsApp+Image+2019-01-17+at+18.49.26%281%29.jpeg",
+                    "size": 173940,
+                    "eTag": "27f92d18582b1051c9c9132894d4cda3",
+                    "sequencer": "005C4B6D063D7E4142"
+                }
+            }
+        }
     ]
- }
+}

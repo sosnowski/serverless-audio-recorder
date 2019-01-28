@@ -23,6 +23,11 @@ Globals:
             Variables:
                 DB_TABLE: AudioRecordingsTable
                 CURRENT_USER_ID: 1
+    Api:
+      Cors:
+        AllowMethods: "'GET, POST, DELETE, OPTIONS'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
 
 
 Resources:
@@ -34,8 +39,8 @@ Resources:
       Properties:
         PolicyName: 'audio-rec-dynamodb-readonly'
         Roles:
-          - RoleForLambdaApiGetRecordings
-          - RoleForLambdaS3CreateRecording
+          - !Ref LambdaApiGetRecordingsRole
+          - !Ref LambdaS3CreateRecordingRole
         PolicyDocument:
           Version: "2012-10-17"
           Statement:
@@ -46,8 +51,7 @@ Resources:
                 - "dynamodb:GetItem"
                 - "dynamodb:Query"
                 - "dynamodb:Scan"
-              Resource: !Ref DynamoDBTable
-              # Resource: arn:aws:dynamodb:eu-west-1:273063963518:table/AudioRecordingsTable
+              Resource: !GetAtt [ DynamoDBTable, Arn ]
 
     PolicyS3AudioFilesBucketReadonly:
       Type: AWS::IAM::Policy
@@ -55,6 +59,8 @@ Resources:
         - "S3AudioFilesBucket"
       Properties:
         PolicyName: 'audio-rec-s3-audio-files-readonly'
+        Roles:
+            - !Ref LambdaS3CreateRecordingRole
         PolicyDocument:
           Version: "2012-10-17"
           Statement:
@@ -62,7 +68,7 @@ Resources:
               Effect: Allow
               Action:
                 - "s3:GetObject"
-              Resource: !Ref S3AudioFilesBucket
+              Resource: !GetAtt [ S3AudioFilesBucket, Arn ]
 
     SNSNewFile:
       Type: AWS::SNS::Topic
@@ -72,7 +78,7 @@ Resources:
         Subscription:
           -
             Protocol: lambda
-            Endpoint: !GetAtt [ LambdaS3CreateRecording, Arn]
+            Endpoint: !GetAtt [ LambdaApiGetRecordings, Arn]
 
     SNSNewFilePolicy:
       Type: AWS::SNS::TopicPolicy
@@ -157,39 +163,6 @@ Resources:
               Event: s3:ObjectCreated:*
               Topic: !Ref SNSNewFile
 
-    # RoleForLambdaS3CreateRecording:
-    #   Type: AWS::IAM::Role
-    #   Properties:
-    #     AssumeRolePolicyDocument:
-    #       Version: "2012-10-17"
-    #       Statement:
-    #         - Effect: Allow
-    #           Principal:
-    #             Service: lambda.amazonaws.com
-    #           Action: "sts:AssumeRole"
-    #     Policies:
-    #       -
-    #         PolicyName: audio-recorder-s3-recordings-readonly
-    #         PolicyDocument:
-    #           Version: "2012-10-17"
-    #           Statement:
-    #             -
-    #               Effect: Allow
-    #               Action:
-    #                 - "s3:GetObject"
-    #               Resource: !Join 
-    #                 - ''
-    #                 - - 'arn:aws:s3:::'
-    #                   - !Ref S3AudioFilesBucket
-    #             -
-    #               Effect: Allow
-    #               Action:
-    #                 - "dynamodb:BatchGetItem"
-    #                 - "dynamodb:GetItem"
-    #                 - "dynamodb:Query"
-    #                 - "dynamodb:Scan"
-    #               Resource: !GetAtt [ DynamoDBTable, Arn]
-
     LayerSharedModule:
       Type: AWS::Serverless::LayerVersion
       Properties:
@@ -201,13 +174,11 @@ Resources:
 
     LambdaApiGetRecordings:
         Type: AWS::Serverless::Function
-        DependsOn:
-          - "RoleForLambdaApiGetRecordings"
         Properties:
             CodeUri: api-get-recordings/
             Handler: dist/get-recordings.lambdaHandler
             Runtime: nodejs8.10
-            Role: !GetAtt [ RoleForLambdaApiGetRecordings, Arn]
+            Role: !GetAtt [ LambdaApiGetRecordingsRole, Arn]
             Layers:
               - !Ref LayerSharedModule
             Events:
@@ -217,7 +188,7 @@ Resources:
                         Path: /recordings
                         Method: get
 
-    RoleForLambdaApiGetRecordings:
+    LambdaApiGetRecordingsRole:
       Type: AWS::IAM::Role
       Properties:
         AssumeRolePolicyDocument:
@@ -227,22 +198,25 @@ Resources:
               Principal:
                 Service: lambda.amazonaws.com
               Action: "sts:AssumeRole"
-        Policies:
-          - !Ref PolicyDynamoDBReadonly
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
     LambdaS3CreateRecording:
         Type: AWS::Serverless::Function
-        DependsOn:
-          - "RoleForLambdaS3CreateRecording"
         Properties:
             CodeUri: s3-create-recording/
             Handler: dist/create-recording.lambdaHandler
             Runtime: nodejs8.10
-            Policies: AmazonS3ReadOnlyAccess
+            Role: !GetAtt [ LambdaS3CreateRecordingRole, Arn]
             Layers:
               - !Ref LayerSharedModule
+            Events:
+              SNSNewFileEvent:
+                Type: SNS
+                Properties:
+                  Topic: !Ref SNSNewFile
 
-    RoleForLambdaS3CreateRecording:
+    LambdaS3CreateRecordingRole:
       Type: AWS::IAM::Role
       Properties:
         AssumeRolePolicyDocument:
@@ -252,35 +226,8 @@ Resources:
               Principal:
                 Service: lambda.amazonaws.com
               Action: "sts:AssumeRole"
-        Policies:
-          - !Ref PolicyDynamoDBReadonly
-          - !Ref PolicyS3AudioFilesBucketReadonly
-          -
-            PolicyName: allow-sns-execution
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                -
-                  Effect: Allow
-                  Principal:
-                    Service: sns.amazonaws.com
-                  Action: 'lambda.invokeFunction'
-                  Resource: !Ref LambdaS3CreateRecording
-                  Condition:
-                    ArnLike:
-                      AWS:SourceArn: !Ref SNSNewFile
-
-              # NewAudioFileEvent:
-              #   Type: S3
-              #   Properties:
-              #     Bucket: !Ref S3AudioFilesBucket
-              #     Events: "s3:ObjectCreated:*"
-              #     Filter:
-              #       S3Key:
-              #         Rules:
-              #           -
-              #             Name: prefix
-              #             Value: audio-files/
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
 
 
@@ -290,7 +237,7 @@ Resources:
             CodeUri: api-get-upload-url
             Handler: dist/get-upload-url.lambdaHandler
             Runtime: nodejs8.10
-            Role: !GetAtt [ RoleForLambdaApiGetRecordings, Arn]
+            Role: !GetAtt [ LambdaApiGetUploadUrlRole, Arn]
             Layers:
               - !Ref LayerSharedModule
             Events:
@@ -299,6 +246,30 @@ Resources:
                     Properties:
                         Path: /upload-url
                         Method: get
+
+    LambdaApiGetUploadUrlRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: "sts:AssumeRole"
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        Policies:
+          -
+            PolicyName: allow-get-signed-url-for-upload
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                -
+                  Effect: Allow
+                  Action:
+                    - "s3:PutObject"
+                  Resource: !GetAtt [ S3AudioFilesBucket, Arn ]
 
     DynamoDBTable:
         Type: AWS::DynamoDB::Table

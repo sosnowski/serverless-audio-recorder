@@ -1,0 +1,17 @@
+{
+  "name": "audio-recorder-server",
+  "version": "1.0.0",
+  "description": "This is a sample template for aws-audio-recorder - Below is a brief explanation of what we have generated for you:",
+  "main": "index.js",
+  "scripts": {
+    "run": "./node_modules/.bin/ts-node ./deploy/run"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/minimist": "^1.2.0",
+    "@types/node": "^10.12.18",
+    "aws-sdk": "^2.395.0",
+    "minimist": "^1.2.0"
+  }
+}
