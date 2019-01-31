@@ -1,12 +1,17 @@
 
 import { S3 } from 'aws-sdk';
-import { promisify } from 'util';
-import { Db, Request } from '@shared';
+import { Request } from '@shared';
+import { promisify } from 'util'
 import { DateTime } from 'luxon';
 
-const { DB_TABLE, CURRENT_USER_ID } = process.env;
+// https://sanderknape.com/2017/08/using-pre-signed-urls-upload-file-private-s3-bucket/
 
-const s3 = new S3();
+
+const { DB_TABLE, CURRENT_USER_ID, AUDIO_FILES_BUCKET } = process.env;
+
+const s3 = new S3({
+    signatureVersion: 'v4',
+});
 
 const getSignedUrl = promisify<string, any, string>(s3.getSignedUrl.bind(s3));
 
@@ -16,17 +21,16 @@ export const lambdaHandler = async (event: any = {}, context: any) => {
     const itemKey = `audio-files/User ${CURRENT_USER_ID} - ${date.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS)}`;
     const extension = 'ogg';
     try {
-        const params = event.queryStringParameters || {};
+        console.log(`BUCKET NAME: ${AUDIO_FILES_BUCKET}`);
         const url = await getSignedUrl('putObject', {
-            Bucket: 'audio-recorder-recordings-bucket',
+            Bucket: AUDIO_FILES_BUCKET,
             Key: `${itemKey}.${extension}`,
-            ContentType: 'audio/ogg',
+            ContentType: 'audio/ogg; codecs=opus',
             Metadata: {
                 title: title,
                 user: CURRENT_USER_ID
             }
         });
-        console.log(`url: ${url}`);
         return Request.ok(url);
     } catch (err) {
         console.log(err);

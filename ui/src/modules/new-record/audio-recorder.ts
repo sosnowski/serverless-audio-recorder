@@ -21,7 +21,7 @@ export class AudioRecorder {
         this.stopPromise = new Promise<File>((resolve, reject) => {
             this.recorder.onstop = () => {
                 console.log('record stopped');
-                const blob = new Blob(this.chunks, { type: 'audio/ogg' });
+                const blob = new Blob(this.chunks, { type: 'audio/ogg; codecs=opus' });
                 resolve(new File([blob], 'audio-record'));
             }
         });

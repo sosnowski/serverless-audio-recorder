@@ -2,7 +2,7 @@ import { inspect } from 'util';
 import { S3, DynamoDB } from 'aws-sdk';
 import { Models } from '@shared';
 
-const { DB_TABLE, CURRENT_USER_ID } = process.env;
+const { DB_TABLE, CURRENT_USER_ID, AUDIO_FILES_BUCKET } = process.env;
 
 const s3 = new S3();
 const db = new DynamoDB.DocumentClient();
@@ -11,9 +11,10 @@ const db = new DynamoDB.DocumentClient();
 export const lambdaHandler = async (event: any, context: any) => {
     console.log("Reading options from event:\n", inspect(event, {depth: 5}));
     try {
-        const srcBucket = event.Records[0].s3.bucket.name;
-        const srcKey = event.Records[0].s3.object.key;
-
+        const eventMessage = JSON.parse(event.Records[0].Sns.Message);
+        const srcBucket = eventMessage.Records[0].s3.bucket.name;
+        const srcKey = decodeURIComponent(eventMessage.Records[0].s3.object.key.replace(/\+/g, " "))
+        console.log(`Trying to read headObject: ${srcBucket} : ${srcKey}`);
         const objectInfo = await s3.headObject({
             Bucket: srcBucket,
             Key: srcKey

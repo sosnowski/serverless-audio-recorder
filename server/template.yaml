@@ -22,13 +22,8 @@ Globals:
         Environment:
             Variables:
                 DB_TABLE: AudioRecordingsTable
+                AUDIO_FILES_BUCKET: audio-rec-dev-audio-files
                 CURRENT_USER_ID: 1
-    Api:
-      Cors:
-        AllowMethods: "'GET, POST, DELETE, OPTIONS'"
-        AllowHeaders: "'*'"
-        AllowOrigin: "'*'"
-
 
 Resources:
 
@@ -53,6 +48,23 @@ Resources:
                 - "dynamodb:Scan"
               Resource: !GetAtt [ DynamoDBTable, Arn ]
 
+    PolicyDynamoDBWriteonly:
+      DependsOn:
+        - "DynamoDBTable"
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: 'audio-rec-dynamodb-writeonly'
+        Roles:
+          - !Ref LambdaS3CreateRecordingRole
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Effect: Allow
+              Action:
+                - "dynamodb:Put*"
+              Resource: !GetAtt [ DynamoDBTable, Arn ]
+
     PolicyS3AudioFilesBucketReadonly:
       Type: AWS::IAM::Policy
       DependsOn:
@@ -67,8 +79,11 @@ Resources:
             -
               Effect: Allow
               Action:
-                - "s3:GetObject"
-              Resource: !GetAtt [ S3AudioFilesBucket, Arn ]
+                - "s3:Get*"
+              Resource: !Join
+                    - ''
+                    - - !GetAtt [ S3AudioFilesBucket, Arn ]
+                      - /*
 
     SNSNewFile:
       Type: AWS::SNS::Topic
@@ -98,7 +113,7 @@ Resources:
               Resource: !Ref SNSNewFile
               Condition:
                 ArnLike:
-                  aws:SourceArn: !Join 
+                  aws:SourceArn: !Join
                     - ''
                     - - 'arn:aws:s3:::'
                       - !Sub '${AWS::StackName}-${AudioFilesBucketName}'
@@ -127,7 +142,7 @@ Resources:
               Effect: Allow
               Principal: '*'
               Action: 's3:GetObject'
-              Resource: !Join 
+              Resource: !Join
                 - ''
                 - - 'arn:aws:s3:::'
                   - !Ref S3HostingBucket
@@ -142,7 +157,7 @@ Resources:
         BucketName: !Sub '${AWS::StackName}-${AudioFilesBucketName}'
         CorsConfiguration:
           CorsRules:
-            - 
+            -
               AllowedOrigins:
                 - "*"
               AllowedMethods:
@@ -269,7 +284,10 @@ Resources:
                   Effect: Allow
                   Action:
                     - "s3:PutObject"
-                  Resource: !GetAtt [ S3AudioFilesBucket, Arn ]
+                  Resource: !Join
+                    - ''
+                    - - !GetAtt [ S3AudioFilesBucket, Arn ]
+                      - /*
 
     DynamoDBTable:
         Type: AWS::DynamoDB::Table

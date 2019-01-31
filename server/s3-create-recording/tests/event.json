@@ -1,38 +1,24 @@
 {
-    "Records": [
-        {
-            "eventVersion": "2.1",
-            "eventSource": "aws:s3",
-            "awsRegion": "eu-west-1",
-            "eventTime": "2019-01-25T20:09:42.305Z",
-            "eventName": "ObjectCreated:Put",
-            "userIdentity": {
-                "principalId": "A9575FY89SHB3"
-            },
-            "requestParameters": {
-                "sourceIPAddress": "109.173.193.140"
-            },
-            "responseElements": {
-                "x-amz-request-id": "D86C24311D14B198",
-                "x-amz-id-2": "Fz9g+5PrUDEsIrgFNv2YzDv4UkR6C5fZ4U5d0sIDYkS4mdiO92Ji6bSk6OVQk7NKc2kSy1Q9bew="
-            },
-            "s3": {
-                "s3SchemaVersion": "1.0",
-                "configurationId": "e1172847-5eed-4f44-9695-f8a1611c30af",
-                "bucket": {
-                    "name": "audio-rec-dev-audio-files",
-                    "ownerIdentity": {
-                        "principalId": "A9575FY89SHB3"
-                    },
-                    "arn": "arn:aws:s3:::audio-rec-dev-audio-files"
-                },
-                "object": {
-                    "key": "WhatsApp+Image+2019-01-17+at+18.49.26%281%29.jpeg",
-                    "size": 173940,
-                    "eTag": "27f92d18582b1051c9c9132894d4cda3",
-                    "sequencer": "005C4B6D063D7E4142"
-                }
+   "Records":[
+      {
+         "EventSource":"aws:sns",
+         "EventVersion":"1.0",
+         "EventSubscriptionArn":"arn:aws:sns:eu-west-1:273063963518:new-audio-file-topic:7015c122-6b44-42e5-983c-b5b75b493a30",
+         "Sns":{
+            "Type":"Notification",
+            "MessageId":"350d222f-b47f-55af-ac14-76e4760be727",
+            "TopicArn":"arn:aws:sns:eu-west-1:273063963518:new-audio-file-topic",
+            "Subject":"Amazon S3 Notification",
+            "Message":"{\"Records\":[{\"eventVersion\":\"2.1\",\"eventSource\":\"aws:s3\",\"awsRegion\":\"eu-west-1\",\"eventTime\":\"2019-01-30T15:18:12.663Z\",\"eventName\":\"ObjectCreated:Put\",\"userIdentity\":{\"principalId\":\"AWS:AROAIAUZUUK4EYZTVU57U:audio-rec-dev-LambdaApiGetUploadUrl-1JLR8KCKMIVN7\"},\"requestParameters\":{\"sourceIPAddress\":\"87.204.81.131\"},\"responseElements\":{\"x-amz-request-id\":\"AC15BA865EBEB013\",\"x-amz-id-2\":\"Z+ULetUZOToi6YJ9jz5WvoJFDvyZMUitjoTySQ85PYS8z2hlUbWOaadBRcEpYFCOkj72CxwmI1s=\"},\"s3\":{\"s3SchemaVersion\":\"1.0\",\"configurationId\":\"aefbc927-afb9-4e00-af2c-0b9605b22d31\",\"bucket\":{\"name\":\"audio-rec-dev-audio-files\",\"ownerIdentity\":{\"principalId\":\"A9575FY89SHB3\"},\"arn\":\"arn:aws:s3:::audio-rec-dev-audio-files\"},\"object\":{\"key\":\"audio-files/User+1+-+Jan+30%2C+2019%2C+3%3A18%3A12+PM.ogg\",\"size\":13423,\"eTag\":\"983cdaebdae98c262556485b26e76a84\",\"sequencer\":\"005C51C0349126A2B9\"}}}]}",
+            "Timestamp":"2019-01-30T15:18:12.753Z",
+            "SignatureVersion":"1",
+            "Signature":"EyaAmCmLcMZeL4QOFB8XPyKCBEBF0IF1y0giu9dT/xm7+wsfZF9RbaKmvD0jIt7XbQ/zUbaU2ijer8wEfmCoS6I+meRu/fiJJzZ0k+ckqlJ8KzeB1+WjX9Zrh7rDz33M+uM28/QmC/BgYlYGZqNcLIFaz/6lyDzBdUrm4GeKiizfE1dXfR991EzP8xjY06qv9OBKTxLUwFi1ZW7O0vYdahtbq02sD6UXuyVWBrT+d3DWeAef1LVqJ+P3znYThdRadP3tPXlXbIRm4cd0032/E5DLRL9tc1AxauwDZzRFOJrywqnc8A6sityO75wh10xHgSnzFy2l8DjP5ZdXBzmKzg==",
+            "SigningCertUrl":"https://sns.eu-west-1.amazonaws.com/SimpleNotificationService-ac565b8b1a6c5d002d285f9598aa1d9b.pem",
+            "UnsubscribeUrl":"https://sns.eu-west-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-west-1:273063963518:new-audio-file-topic:7015c122-6b44-42e5-983c-b5b75b493a30",
+            "MessageAttributes":{
+
             }
-        }
-    ]
+         }
+      }
+   ]
 }

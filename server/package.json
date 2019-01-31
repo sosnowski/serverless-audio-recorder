@@ -4,7 +4,7 @@
   "description": "This is a sample template for aws-audio-recorder - Below is a brief explanation of what we have generated for you:",
   "main": "index.js",
   "scripts": {
-    "run": "./node_modules/.bin/ts-node ./deploy/run"
+    "task": "./node_modules/.bin/ts-node ./deploy/run"
   },
   "author": "",
   "license": "ISC",
@@ -12,6 +12,8 @@
     "@types/minimist": "^1.2.0",
     "@types/node": "^10.12.18",
     "aws-sdk": "^2.395.0",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "ts-node": "^8.0.2",
+    "typescript": "^3.2.4"
   }
 }
