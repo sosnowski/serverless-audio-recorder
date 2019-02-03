@@ -36,6 +36,7 @@ Resources:
         Roles:
           - !Ref LambdaApiGetRecordingsRole
           - !Ref LambdaS3CreateRecordingRole
+          - !Ref LambdaApiGetRecordingRole
         PolicyDocument:
           Version: "2012-10-17"
           Statement:
@@ -73,6 +74,7 @@ Resources:
         PolicyName: 'audio-rec-s3-audio-files-readonly'
         Roles:
             - !Ref LambdaS3CreateRecordingRole
+            - !Ref LambdaApiGetRecordingRole
         PolicyDocument:
           Version: "2012-10-17"
           Statement:
@@ -204,6 +206,35 @@ Resources:
                         Method: get
 
     LambdaApiGetRecordingsRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: "sts:AssumeRole"
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+    LambdaApiGetRecording:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: api-get-recording/
+            Handler: dist/get-recording.lambdaHandler
+            Runtime: nodejs8.10
+            Role: !GetAtt [ LambdaApiGetRecordingRole, Arn]
+            Layers:
+              - !Ref LayerSharedModule
+            Events:
+                GetRecordings:
+                    Type: Api
+                    Properties:
+                        Path: /recordings/{recordId}
+                        Method: get
+
+    LambdaApiGetRecordingRole:
       Type: AWS::IAM::Role
       Properties:
         AssumeRolePolicyDocument:

@@ -24,8 +24,16 @@ export const lambdaHandler = async (event: any, context: any) => {
                 ':userId': CURRENT_USER_ID
             }
         }).promise();
-
-        return Request.ok(res.Items || []);
+        const records = res.Items || [];
+        records.sort((a, b) => {
+            if (a.created > b.created) {
+                return -1;
+            } else {
+                return 1;
+            }
+            return 0;
+        });
+        return Request.ok(records);
     } catch (err) {
         console.log(err);
         return Request.error(err);

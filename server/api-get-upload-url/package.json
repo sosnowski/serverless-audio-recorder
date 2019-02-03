@@ -8,12 +8,12 @@
   "license": "MIT",
   "proxy": "http://127.0.0.1:3000",
   "dependencies": {
-    "@types/aws-sdk": "^2.7.0",
-    "@types/luxon": "^1.4.1",
-    "@types/node": "^10.12.18",
     "luxon": "^1.10.0"
   },
   "scripts": {
     "test": "mocha tests/unit/"
+  },
+  "devDependencies": {
+    "@types/luxon": "^1.10.2"
   }
 }

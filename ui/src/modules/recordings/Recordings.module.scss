@@ -1,4 +1,31 @@
-.container {
-    flex: 1;
+@import '../../styles/variables';
+
+.loader {
     text-align: center;
+    margin: 2rem;
+}
+
+.list {
+    flex: 1;
+    display: block;
+    list-style: none;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+        border-bottom: 1px solid lighten($mainBgColor, 20%);
+        display: block;
+        cursor: pointer;
+        a {
+            transition: all 0.5s;
+            display: block;
+            padding: 1.5rem 1rem;
+        }
+        &:hover {
+            a {
+                color: $mainTextColor;
+            }
+        }
+    }
 }

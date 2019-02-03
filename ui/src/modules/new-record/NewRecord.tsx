@@ -21,12 +21,14 @@ interface State {
     isRecording: boolean;
     error?: string;
     hint?: Messages;
+    time?: number;
 }
 
-export default class NewRecord extends Component {
+export default class NewRecord extends Component<{}, State> {
 
     state: State;
     audioRecorder?: AudioRecorder;
+    timer?: NodeJS.Timeout;
 
     onStart = async () => {
         let stream: MediaStream;
@@ -45,6 +47,7 @@ export default class NewRecord extends Component {
             hint: Messages.Pending,
             error: undefined
         });
+        this.timer = this.startCounter();
     }
 
     onStop = async () => {
@@ -52,10 +55,12 @@ export default class NewRecord extends Component {
             return;
         }
         const file = await this.audioRecorder.stop();
-        console.log(`state: ${this.audioRecorder.state}`);
         this.setState({
             isRecording: false
         });
+        if (this.timer) {
+            clearInterval(this.timer);
+        }
         this.saveRecording(file);
     }
 
@@ -65,6 +70,22 @@ export default class NewRecord extends Component {
             isRecording: false,
             hint: Messages.Ready
         };
+    }
+
+    startCounter(): NodeJS.Timeout {
+        let time = 0;
+        this.setState({
+            time: 0
+        });
+        return setInterval(() => {
+            time += 1;
+            this.setState({
+                time: time
+            });
+            if (time > 60) {
+                this.onStop();
+            }
+        }, 1000);
     }
 
     async getMediaDevice(): Promise<MediaStream> {
@@ -99,6 +120,9 @@ export default class NewRecord extends Component {
                 <section className={styles.hint}>{this.state.hint}</section>
             )}
             <section className={styles.record}>
+                {
+                    this.state.isRecording ? (<p className={styles.timer}>Time: {this.state.time} / 60 sec.</p>) : null
+                }
                 <RecordButton isRecording={this.state.isRecording} onStart={this.onStart} onStop={this.onStop}/>
             </section>
             </main>

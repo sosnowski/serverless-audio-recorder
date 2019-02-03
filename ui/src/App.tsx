@@ -6,6 +6,7 @@ import { Header } from './core/header/Header';
 import NewRecord from './modules/new-record';
 import Recordings from './modules/recordings';
 import NotFound from './modules/not-found';
+import Recording from './modules/recording';
 
 class App extends Component {
 
@@ -54,6 +55,7 @@ class App extends Component {
                     <Suspense fallback={<div>Loading</div>}>
                         <Switch>
                             <Route path="/" exact component={NewRecord} />
+                            <Route path="/recordings/:recordId" component={Recording} />
                             <Route path="/recordings" component={Recordings} />
                             <Route component={NotFound}/>
                         </Switch>

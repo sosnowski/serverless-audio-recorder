@@ -18,7 +18,7 @@ const getSignedUrl = promisify<string, any, string>(s3.getSignedUrl.bind(s3));
 export const lambdaHandler = async (event: any = {}, context: any) => {
     const date = DateTime.local();
     const title = `Recording - ${date.toLocaleString(DateTime.DATETIME_MED)}`;
-    const itemKey = `audio-files/User ${CURRENT_USER_ID} - ${date.toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS)}`;
+    const itemKey = `user-${CURRENT_USER_ID}-${date.toISO()}`;
     const extension = 'ogg';
     try {
         console.log(`BUCKET NAME: ${AUDIO_FILES_BUCKET}`);
