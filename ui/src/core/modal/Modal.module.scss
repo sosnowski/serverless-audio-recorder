@@ -1,0 +1,66 @@
+@import '../../styles/variables';
+
+.visible {
+    .modal {
+        top: 0;
+    }
+
+    .glass {
+        display: block;
+    }
+}
+
+.hidden {
+    .modal {
+        top: -25%;
+    }
+
+    .glass {
+        display: none;
+    }
+}
+
+.glass {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba($mainBgColor, 0.3);
+    z-index: 100;
+}
+
+.modal {
+    position: fixed;
+    transition: top 0.3s ease-in;
+    z-index: 200;
+    width: 30rem;
+    left: calc(50% - 15rem);
+    background: $mainTextColor;
+    > header {
+        background: $inactiveTextColor;
+        color: $mainTextColor;
+        font-weight: bold;
+        padding: 0.5rem;
+    }
+    .content {
+        text-align: center;
+        color: $inactiveTextColor;
+        padding: 0.5rem;
+    }
+
+    > footer {
+        text-align: center;
+        button {
+            border: 0;
+            background: $inactiveTextColor;
+            color: $mainTextColor;
+            padding: 0.5rem 1rem;
+            font-size: 1.4rem;
+            margin: 0.5rem;
+            min-width: 6rem;
+            cursor: pointer;
+        }
+    }
+}

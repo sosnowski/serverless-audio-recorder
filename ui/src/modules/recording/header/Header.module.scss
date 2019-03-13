@@ -1,0 +1,61 @@
+@import '../../../styles/variables';
+
+
+.header {
+    h1 {
+        font-size: 2rem;
+        color: $activeTextColor;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: stretch;
+
+        .title {
+            flex: 1;
+        }
+
+        .menuToggle {
+            padding: 0 1rem;
+            color: rgba($inactiveTextColor, 0.3);
+            &:hover {
+                color: $inactiveTextColor;
+            }
+            align-self: center;
+            cursor: pointer;
+        }
+
+        .menu {
+            background: $activeTextColor;
+            width: 0;
+            transition: width 0.5s;
+            padding: 0;
+            display: block;
+            color: $mainBgColor;
+            padding: 0 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-align: center;
+    
+            i {
+                margin: 0rem 1rem;
+                color: $inactiveTextColor;
+                font-size: 1.5rem;
+                &:hover {
+                    color: $mainBgColor;
+                }
+                line-height: 2;
+                cursor: pointer;
+            }
+        }
+        &.withMenu {
+            .menu {
+                width: 8rem;
+            }
+        }
+    }
+    p {
+        color: $inactiveTextColor;
+        font-size: 1rem;
+    }
+}

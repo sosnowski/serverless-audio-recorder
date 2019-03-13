@@ -1,6 +1,9 @@
+import { DateTime } from "luxon";
+
 export interface Recording {
     title: string;
-    created: Date;
-    audioUrl: string;
+    created: DateTime;
+    getAudioUrl: string;
+    deleteAudioURl: string;
     id: string;
 }

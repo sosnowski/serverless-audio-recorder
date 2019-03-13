@@ -25,14 +25,21 @@ const getSignedUrl = promisify<string, any, string>(s3.getSignedUrl.bind(s3));
 
 export const lambdaHandler = async (event: any, context: any) => {
     try {
-
         const recordId = decodeURIComponent(event.pathParameters.recordId);
-        console.log(`Requested record ID: ${recordId}`);
+        console.log(`\nUpdated record ID: ${recordId}`);
         if (!recordId) {
             throw new Error('Missing recordId parameter');
         }
-        console.log('Reading DB for a record');
-        const res = await getDb().get({
+        console.log('\nEvent body\n');
+        console.log(event.body);
+        const newRecordData: Partial<Models.Recording> = JSON.parse(event.body);
+        console.log('\n');
+        console.log(newRecordData);
+        if (!newRecordData.title) {
+            throw new Error('Missing new record title!');
+        }
+        console.log('\nReading DB for a record');
+        const currentRecord = await getDb().get({
             TableName: DB_TABLE!,
             Key: {
                 userId: CURRENT_USER_ID,
@@ -40,11 +47,22 @@ export const lambdaHandler = async (event: any, context: any) => {
             }
         }).promise();
 
-        console.log('Record loaded');
-
-        if (!res.Item) {
+        if (!currentRecord.Item) {
             throw new Error(`Record: ${recordId} for user ${CURRENT_USER_ID} not found`);
         }
+
+        const newRecord = Object.assign({}, currentRecord.Item , {
+            title: newRecordData.title
+        });
+
+        console.log(`\nSave new record`);
+
+        const result = await getDb().put({
+            TableName: DB_TABLE!,
+            Item: newRecord
+        }).promise();
+
+        console.log(`\nGet new urls`);
 
         const getAudioUrlPromise = getSignedUrl('getObject', {
             Bucket: AUDIO_FILES_BUCKET,
@@ -59,7 +77,7 @@ export const lambdaHandler = async (event: any, context: any) => {
         });
 
         return Request.ok({
-            ...res.Item,
+            ...newRecord,
             getAudioUrl: await getAudioUrlPromise,
             deleteAudioUrl: await deleteAudioUrlPromise
         });
